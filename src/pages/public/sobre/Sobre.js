@@ -20,15 +20,10 @@ const Sobre = () => {
         <SobreSection>
           <SectionTitle><FaBookOpen /> Nossa Missão</SectionTitle>
           <SectionContent>
-            <p>
-              O UniCEDUP é o jornal digital oficial do grêmio estudantil, criado com o objetivo de 
-              manter toda a comunidade acadêmica informada sobre os acontecimentos, eventos, 
-              notícias e atividades da instituição.
-            </p>
-            <p>
-              Nossa missão é promover a comunicação transparente e eficiente entre alunos, 
-              professores e funcionários, além de dar voz aos estudantes e suas iniciativas.
-            </p>
+           A chapa UniCEDUP tem como principal objetivo satisfazer as sugestões dos estudantes. Usando os meios criados pela mesma, como o site e as caixas de perguntas já postas nos pilares a frente da escada. A ideia de promover eventos também é objetivo da equipe, inter-classes, show de talentos e muito mais. 
+          Juntamente com as demais ideias, existe a gincana, as salas entrarão em competição nos eventos escolares - por exemplo, a turma que vier mais bem vestida em um evento de festa junina ganhará pontos, somando no final e trazendo um vencedor - fazendo assim os mesmos ganharem o prêmio de uma viagem.
+          Reclamações sobre a gestão escolar ou professores, serão todas encaminhadas a diretoria
+          O grupo não promete coisas que não caibam a eles fazerem.
           </SectionContent>
         </SobreSection>
         
@@ -36,8 +31,8 @@ const Sobre = () => {
           <SectionTitle><FaHistory /> Nossa História</SectionTitle>
           <SectionContent>
             <p>
-              O jornal digital UniCEDUP foi fundado em 2023, como uma evolução do antigo 
-              informativo impresso que circulava na instituição. Com a necessidade de uma 
+              O jornal digital UniCEDUP foi fundado em 2025, como uma ideia para
+              informativos na instituição. Com a necessidade de uma 
               comunicação mais ágil e sustentável, o grêmio estudantil decidiu migrar para 
               o formato digital, ampliando o alcance e as possibilidades de interação.
             </p>
@@ -60,38 +55,152 @@ const Sobre = () => {
             
             <EquipeGrid>
               <MembroCard>
-                <MembroFoto src="https://via.placeholder.com/150" alt="Foto do membro" />
-                <MembroNome>Ana Silva</MembroNome>
-                <MembroCargo>Editora-chefe</MembroCargo>
+                <MembroFoto src="foto_brayan.jpg" alt="Foto do membro" />
+                <MembroNome>Brayan Zwang</MembroNome>
+                <MembroCargo>Presidente</MembroCargo>
                 <MembroDescricao>
-                  Responsável pela coordenação geral do jornal e aprovação final dos conteúdos.
+                  Representa o Grêmio dentro da Escola e fora dela.
+                </MembroDescricao>
+              </MembroCard>
+
+
+              <MembroCard>
+                <MembroFoto src="foto raiser.jpg" alt="Foto do membro" />
+                <MembroNome>Heloísa Raiser</MembroNome>
+                <MembroCargo>Vice-Presidente</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o Presidente no exercício de suas funções.
                 </MembroDescricao>
               </MembroCard>
               
               <MembroCard>
-                <MembroFoto src="https://via.placeholder.com/150" alt="Foto do membro" />
-                <MembroNome>Pedro Santos</MembroNome>
-                <MembroCargo>Editor de Notícias</MembroCargo>
+                <MembroFoto src="foto bia.jpg" alt="Foto do membro" />
+                <MembroNome>Beatriz Michels</MembroNome>
+                <MembroCargo>Secretária-Geral</MembroCargo>
                 <MembroDescricao>
-                  Coordena a equipe de reportagem e a produção de conteúdo jornalístico.
+                  Elabora avisos e convocações de reuniões, encaminhando para o Coordenador de Imprensa e Divulgação.
                 </MembroDescricao>
               </MembroCard>
               
               <MembroCard>
-                <MembroFoto src="https://via.placeholder.com/150" alt="Foto do membro" />
-                <MembroNome>Carla Oliveira</MembroNome>
-                <MembroCargo>Editora de Eventos</MembroCargo>
+                <MembroFoto src="foto bya.jpg" alt="Foto do membro" />
+                <MembroNome>Byanka Wolski</MembroNome>
+                <MembroCargo>Diretora Financeira</MembroCargo>
                 <MembroDescricao>
-                  Responsável pela cobertura e divulgação dos eventos da instituição.
+                  Mantém em dia a escrituração de todo o movimento financeiro do Grêmio;
                 </MembroDescricao>
               </MembroCard>
-              
               <MembroCard>
-                <MembroFoto src="https://via.placeholder.com/150" alt="Foto do membro" />
-                <MembroNome>Lucas Mendes</MembroNome>
-                <MembroCargo>Editor de Mídias</MembroCargo>
+                <MembroFoto src="foto flavia.jpg" alt="Foto do membro"/>
+                <MembroNome>Flávia Martini</MembroNome>
+                <MembroCargo>Diretora Social</MembroCargo>
                 <MembroDescricao>
-                  Coordena a produção e edição de fotos, vídeos e conteúdo multimídia.
+                  Coordena o serviço de Relações Públicas do Grêmio;
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto mariana.jpg" alt="Foto do membro"/>
+                <MembroNome>Marianna Dancker</MembroNome>
+                <MembroCargo>Diretora Cultural</MembroCargo>
+                <MembroDescricao>
+                  Promove a realização de conferências, exposições, concursos, recitais, festivais de música
+                  e outras atividades de natureza cultural;
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto jose.jpg" alt="Foto do membro"/>
+                <MembroNome>José Vitor Mader</MembroNome>
+                <MembroCargo>Diretor de Imprensa</MembroCargo>
+                <MembroDescricao>
+                   Responsável pela coordenação geral do jornal e aprovação final dos conteúdos e, responsável também por informar os estudantes sobre novidade e informações sobre alterações estudantis.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto dani.jpg" alt="Foto do membro"/>
+                <MembroNome>Daniel Campregher Junior</MembroNome>
+                <MembroCargo>Diretor de Esportes</MembroCargo>
+                <MembroDescricao>
+                  Coordena e orienta as atividades esportivas do corpo discente;
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto jordana.jpg" alt="Foto do membro" />
+                <MembroNome>Jordana Avila</MembroNome>
+                <MembroCargo>Diretora de Saúde e Meio Ambiente</MembroCargo>
+                <MembroDescricao>
+                  Promove ações que visem a conscientização e a melhoria da saúde e do meio ambiente na escola e na comunidade estudantil.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto isa.jpg" alt="Foto do membro" />
+                <MembroNome>Isabela Ferreira</MembroNome>
+                <MembroCargo>Diretora de Relações Estudantis</MembroCargo>
+                <MembroDescricao>
+                  Coordena e mantém o bom relacionamento entre o grêmio, os alunos, a escola e a comunidade.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto sara.jpg" alt="Foto do membro"/>
+                <MembroNome>Sarah Rosa</MembroNome>
+                <MembroCargo>Secretária Adjunta</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o 1º Secretário em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto gabriel.jpg" alt="Foto do membro" />
+                <MembroNome>Gabriel Ferrari</MembroNome>
+                <MembroCargo>Diretor Financeiro Adjunto</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o 1° Tesoureiro em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto larissa.jpg" alt="Foto do membro"/>
+                <MembroNome>Larissa Schneider</MembroNome>
+                <MembroCargo>Suplente Social</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor social em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto cindy.jpg" alt="Foto do membro" />
+                <MembroNome>Cindy Laura</MembroNome>
+                <MembroCargo>Suplente Cultural</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor cultural em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto />
+                <MembroNome>Pietro Corrente</MembroNome>
+                <MembroCargo>Suplente de Imprensa</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor de imprensa em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto rhuon.jpg" alt="Foto do membro"/>
+                <MembroNome>Matheus Ruon</MembroNome>
+                <MembroCargo>Suplente de Esportes</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor de esportes em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto />
+                <MembroNome>Micheli</MembroNome>
+                <MembroCargo>Suplente de Saúde e Meio ambiente</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor de saúde em todas as suas funções.
+                </MembroDescricao>
+              </MembroCard>
+              <MembroCard>
+                <MembroFoto src="foto natalia.jpg" alt="Foto do membro" />
+                <MembroNome>Nataly Ferrari</MembroNome>
+                <MembroCargo>Suplente de Relaçoes Estudantis</MembroCargo>
+                <MembroDescricao>
+                  Auxilia o diretor de relações estudantis em todas as suas funções.
                 </MembroDescricao>
               </MembroCard>
             </EquipeGrid>
@@ -104,7 +213,7 @@ const Sobre = () => {
             <p>
               O UniCEDUP está sempre aberto à participação de novos colaboradores. Se você 
               é estudante da instituição e tem interesse em fazer parte da nossa equipe, 
-              entre em contato com o grêmio estudantil.
+              entre em contato com o grêmio estudantil, para se tornar um apoiador.
             </p>
             <p>
               Também aceitamos sugestões de pautas, feedback sobre o conteúdo e ideias para 
@@ -114,17 +223,17 @@ const Sobre = () => {
             <ContatoContainer>
               <ContatoItem>
                 <ContatoTitulo>E-mail</ContatoTitulo>
-                <ContatoInfo>contato@unicedup.com.br</ContatoInfo>
+                <ContatoInfo></ContatoInfo>
               </ContatoItem>
               
               <ContatoItem>
                 <ContatoTitulo>Sala do Grêmio</ContatoTitulo>
-                <ContatoInfo>Bloco B, Sala 105</ContatoInfo>
+                <ContatoInfo>Sala ao lado da cozinha</ContatoInfo>
               </ContatoItem>
               
               <ContatoItem>
                 <ContatoTitulo>Horário de Atendimento</ContatoTitulo>
-                <ContatoInfo>Segunda a Sexta, das 10h às 17h</ContatoInfo>
+                <ContatoInfo>Segunda a Sexta, das 7:30h às 16:40h</ContatoInfo>
               </ContatoItem>
             </ContatoContainer>
           </SectionContent>
