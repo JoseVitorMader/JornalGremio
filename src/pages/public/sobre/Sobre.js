@@ -172,7 +172,7 @@ const Sobre = () => {
                 </MembroDescricao>
               </MembroCard>
               <MembroCard>
-                <MembroFoto />
+                <MembroFoto src="foto pietro.jpg" alt="Foto do membro"/>
                 <MembroNome>Pietro Corrente</MembroNome>
                 <MembroCargo>Suplente de Imprensa</MembroCargo>
                 <MembroDescricao>

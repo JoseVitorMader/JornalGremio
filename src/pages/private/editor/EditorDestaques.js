@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useAuth } from '../../../contexts/AuthContext';
-import { FaStar, FaSave, FaImage, FaTimes, FaPlus } from 'react-icons/fa';
-import { createDestaque, convertImageToBase64 } from '../../../services/realtimeDatabase';
+import { FaStar, FaSave, FaImage, FaTimes, FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
+import { createDestaque, convertImageToBase64, readDestaques, deleteDestaque } from '../../../services/realtimeDatabase';
 
 // Componente do Editor de Destaques para membros do grêmio
 const EditorDestaques = () => {
@@ -23,6 +23,11 @@ const EditorDestaques = () => {
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
   
+  // Estados para a lista de destaques
+  const [destaquesPublicados, setDestaquesPublicados] = useState([]);
+  const [carregandoDestaques, setCarregandoDestaques] = useState(true);
+  const [erroDestaques, setErroDestaques] = useState('');
+  
   // Lista de tipos de conteúdo disponíveis
   const tiposConteudo = [
     { id: 'noticia', nome: 'Notícia' },
@@ -30,6 +35,77 @@ const EditorDestaques = () => {
     { id: 'aviso', nome: 'Aviso' },
     { id: 'galeria', nome: 'Galeria' }
   ];
+  
+  // Carrega destaques quando o componente é montado
+  useEffect(() => {
+    carregarDestaquesPublicados();
+  }, []);
+  
+  // Função para carregar destaques publicados
+  const carregarDestaquesPublicados = async () => {
+    try {
+      setCarregandoDestaques(true);
+      setErroDestaques('');
+      console.log('🔥 Carregando destaques publicados...');
+      
+      const resultado = await readDestaques();
+      console.log('📊 Resultado dos destaques:', resultado);
+      
+      if (resultado.success) {
+        const dados = resultado.data || [];
+        console.log('✅ Destaques carregados:', dados);
+        setDestaquesPublicados(dados);
+      } else {
+        setErroDestaques('Erro ao carregar destaques: ' + resultado.message);
+        console.error('❌ Erro ao carregar destaques:', resultado.error);
+      }
+    } catch (error) {
+      setErroDestaques('Erro ao carregar destaques: ' + error.message);
+      console.error('💥 Erro inesperado:', error);
+    } finally {
+      setCarregandoDestaques(false);
+    }
+  };
+  
+  // Função para excluir um destaque
+  const handleExcluirDestaque = async (id, titulo) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o destaque "${titulo}"?`)) {
+      return;
+    }
+    
+    try {
+      console.log('🗑️ Excluindo destaque:', id);
+      const resultado = await deleteDestaque(id);
+      
+      if (resultado.success) {
+        console.log('✅ Destaque excluído com sucesso');
+        setMensagem({
+          tipo: 'sucesso',
+          texto: 'Destaque excluído com sucesso!'
+        });
+        
+        // Recarrega a lista
+        carregarDestaquesPublicados();
+      } else {
+        console.error('❌ Erro ao excluir destaque:', resultado.error);
+        setMensagem({
+          tipo: 'erro',
+          texto: `Erro ao excluir destaque: ${resultado.message}`
+        });
+      }
+    } catch (error) {
+      console.error('💥 Erro inesperado ao excluir:', error);
+      setMensagem({
+        tipo: 'erro',
+        texto: `Erro ao excluir destaque: ${error.message}`
+      });
+    }
+    
+    // Limpar mensagem após 5 segundos
+    setTimeout(() => {
+      setMensagem({ tipo: '', texto: '' });
+    }, 5000);
+  };
   
   // Função para lidar com a seleção de imagem
   const handleImagemChange = (e) => {
@@ -101,6 +177,9 @@ const EditorDestaques = () => {
           tipo: 'sucesso',
           texto: 'Destaque publicado com sucesso!'
         });
+        
+        // Recarrega a lista de destaques
+        carregarDestaquesPublicados();
       } else {
         // Erro no envio
         setMensagem({
@@ -152,6 +231,7 @@ const EditorDestaques = () => {
               <Input
                 type="text"
                 id="titulo"
+                name="titulo"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Digite o título do destaque"
@@ -164,6 +244,7 @@ const EditorDestaques = () => {
                 <Label htmlFor="tipo">Tipo de Conteúdo</Label>
                 <Select
                   id="tipo"
+                  name="tipo"
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
                 >
@@ -178,6 +259,7 @@ const EditorDestaques = () => {
                 <Input
                   type="date"
                   id="data"
+                  name="data"
                   value={data}
                   onChange={(e) => setData(e.target.value)}
                 />
@@ -187,6 +269,7 @@ const EditorDestaques = () => {
                 <Label htmlFor="prioridade">Prioridade</Label>
                 <Select
                   id="prioridade"
+                  name="prioridade"
                   value={prioridade}
                   onChange={(e) => setPrioridade(e.target.value)}
                 >
@@ -200,6 +283,7 @@ const EditorDestaques = () => {
               <Label htmlFor="resumo">Resumo *</Label>
               <TextArea
                 id="resumo"
+                name="resumo"
                 value={resumo}
                 onChange={(e) => setResumo(e.target.value)}
                 placeholder="Digite um resumo para o destaque"
@@ -213,6 +297,7 @@ const EditorDestaques = () => {
               <Input
                 type="text"
                 id="conteudoRelacionado"
+                name="conteudoRelacionado"
                 value={conteudoRelacionado}
                 onChange={(e) => setConteudoRelacionado(e.target.value)}
                 placeholder="ID da notícia, evento ou aviso relacionado (opcional)"
@@ -236,9 +321,9 @@ const EditorDestaques = () => {
                   <InputImagem
                     type="file"
                     id="imagem"
+                    name="imagem"
                     accept="image/*"
                     onChange={handleImagemChange}
-                    required
                   />
                   <InputImagemLabel htmlFor="imagem">
                     <FaImage /> Selecionar Imagem
@@ -257,15 +342,59 @@ const EditorDestaques = () => {
           <ListaDestaquesContainer>
             <ListaDestaquesHeader>
               <h2>Destaques Publicados</h2>
-              <BotaoNovoDestaque>
+              <BotaoNovoDestaque onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <FaPlus /> Novo Destaque
               </BotaoNovoDestaque>
             </ListaDestaquesHeader>
             
-            {/* Lista de destaques será implementada posteriormente com dados do Firebase */}
-            <MensagemVazia>
-              A lista de destaques será carregada do Firebase quando a integração for implementada.
-            </MensagemVazia>
+            {carregandoDestaques ? (
+              <LoadingDestaques>
+                <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '1.5rem', color: '#1a4b8c' }} />
+                <p>Carregando destaques...</p>
+              </LoadingDestaques>
+            ) : erroDestaques ? (
+              <ErroDestaques>
+                <p>❌ {erroDestaques}</p>
+                <button onClick={carregarDestaquesPublicados}>Tentar novamente</button>
+              </ErroDestaques>
+            ) : destaquesPublicados.length > 0 ? (
+              <ListaDestaques>
+                {destaquesPublicados.map(destaque => (
+                  <DestaqueItem key={destaque.id}>
+                    {destaque.imagem && (
+                      <DestaqueItemImagem 
+                        src={destaque.imagem} 
+                        alt={destaque.titulo}
+                        onError={(e) => {e.target.style.display = 'none'}}
+                      />
+                    )}
+                    <DestaqueItemConteudo>
+                      <DestaqueItemTitulo>{destaque.titulo}</DestaqueItemTitulo>
+                      <DestaqueItemDescricao>{destaque.descricao}</DestaqueItemDescricao>
+                      <DestaqueItemData>
+                        Criado em: {destaque.createdAt ? new Date(destaque.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                      </DestaqueItemData>
+                      {destaque.link && (
+                        <DestaqueItemLink>
+                          Link: <a href={destaque.link} target="_blank" rel="noopener noreferrer">{destaque.link}</a>
+                        </DestaqueItemLink>
+                      )}
+                    </DestaqueItemConteudo>
+                    <DestaqueItemAcoes>
+                      <BotaoAcao onClick={() => handleExcluirDestaque(destaque.id, destaque.titulo)} color="danger">
+                        <FaTrash />
+                      </BotaoAcao>
+                    </DestaqueItemAcoes>
+                  </DestaqueItem>
+                ))}
+              </ListaDestaques>
+            ) : (
+              <MensagemVazia>
+                Nenhum destaque publicado ainda.
+                <br />
+                <small>Use o formulário acima para criar seu primeiro destaque.</small>
+              </MensagemVazia>
+            )}
           </ListaDestaquesContainer>
         </MainContent>
       </EditorContainer>
@@ -541,6 +670,163 @@ const MensagemVazia = styled.div`
   background-color: #f0f5ff;
   border-radius: 4px;
   color: #1a4b8c;
+  
+  small {
+    color: #666;
+    font-size: 0.9rem;
+  }
+`;
+
+const LoadingDestaques = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+  
+  p {
+    color: #1a4b8c;
+    font-size: 1rem;
+    margin: 0;
+  }
+`;
+
+const ErroDestaques = styled.div`
+  text-align: center;
+  padding: 2rem;
+  background-color: #fee;
+  border-radius: 8px;
+  color: #d32f2f;
+  
+  p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    
+    &:hover {
+      background-color: #b71c1c;
+    }
+  }
+`;
+
+const ListaDestaques = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const DestaqueItem = styled.div`
+  display: flex;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid #e0e0e0;
+  transition: box-shadow 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const DestaqueItemImagem = styled.img`
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+`;
+
+const DestaqueItemConteudo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const DestaqueItemTitulo = styled.h3`
+  font-size: 1.1rem;
+  color: #1a4b8c;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+`;
+
+const DestaqueItemDescricao = styled.p`
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const DestaqueItemData = styled.p`
+  font-size: 0.8rem;
+  color: #999;
+  margin: 0 0 0.25rem 0;
+`;
+
+const DestaqueItemLink = styled.p`
+  font-size: 0.8rem;
+  color: #999;
+  margin: 0;
+  
+  a {
+    color: #1a4b8c;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const DestaqueItemAcoes = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+`;
+
+const BotaoAcao = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  
+  ${props => props.color === 'danger' && `
+    background-color: #f44336;
+    color: white;
+    
+    &:hover {
+      background-color: #d32f2f;
+    }
+  `}
+  
+  ${props => props.color === 'primary' && `
+    background-color: #1a4b8c;
+    color: white;
+    
+    &:hover {
+      background-color: #2c5ea0;
+    }
+  `}
 `;
 
 export default EditorDestaques;

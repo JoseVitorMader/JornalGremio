@@ -113,6 +113,7 @@ const EditorAvisos = () => {
               <Input
                 type="text"
                 id="titulo"
+                name="titulo"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Digite o título do aviso"
@@ -145,6 +146,7 @@ const EditorAvisos = () => {
               <Label htmlFor="conteudo">Conteúdo do Aviso *</Label>
               <TextArea
                 id="conteudo"
+                name="conteudo"
                 value={conteudo}
                 onChange={(e) => setConteudo(e.target.value)}
                 placeholder="Digite o conteúdo completo do aviso"

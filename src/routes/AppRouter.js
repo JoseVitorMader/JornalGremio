@@ -34,10 +34,14 @@ const AppRouter = () => {
           <Route path="/noticias" element={<Noticias />} />
           <Route path="/noticias/:id" element={<NoticiaCompleta />} />
           <Route path="/eventos" element={<Eventos />} />
+          <Route path="/eventos/:id" element={<NoticiaCompleta />} />
           <Route path="/galeria" element={<Galeria />} />
+          <Route path="/galeria/:id" element={<NoticiaCompleta />} />
           <Route path="/avisos" element={<Avisos />} />
+          <Route path="/avisos/:id" element={<NoticiaCompleta />} />
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/destaques" element={<Destaques />} />
+          <Route path="/destaques/:id" element={<NoticiaCompleta />} />
           <Route path="/wikipedia" element={<Wikipedia />} />
           <Route path="/login" element={<Login />} />
           

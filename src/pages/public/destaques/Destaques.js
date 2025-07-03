@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import { FaStar, FaNewspaper, FaCalendarAlt, FaImages } from 'react-icons/fa';
+import { FaStar, FaNewspaper, FaCalendarAlt, FaImages, FaSpinner } from 'react-icons/fa';
 import { readDestaques } from '../../../services/realtimeDatabase';
 
 // Componente da página de Destaques
 const Destaques = () => {
   const [destaques, setDestaques] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
 
   useEffect(() => {
     carregarDestaques();
@@ -16,14 +18,24 @@ const Destaques = () => {
 
   const carregarDestaques = async () => {
     try {
+      setLoading(true);
+      setErro('');
+      console.log('🔥 Carregando destaques do Firebase...');
+      
       const resultado = await readDestaques();
+      console.log('📊 Resultado dos destaques:', resultado);
+      
       if (resultado.success) {
-        setDestaques(resultado.data);
+        const dadosDestaques = resultado.data || [];
+        console.log('✅ Destaques carregados:', dadosDestaques);
+        setDestaques(dadosDestaques);
       } else {
-        console.error('Erro ao carregar destaques:', resultado.error);
+        setErro('Erro ao carregar destaques: ' + resultado.message);
+        console.error('❌ Erro ao carregar destaques:', resultado.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar destaques:', error);
+      setErro('Erro ao carregar destaques: ' + error.message);
+      console.error('💥 Erro inesperado:', error);
     } finally {
       setLoading(false);
     }
@@ -45,13 +57,21 @@ const Destaques = () => {
         </PageHeader>
         
         {loading ? (
-          <LoadingMessage>Carregando destaques...</LoadingMessage>
+          <LoadingContainer>
+            <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '2rem', color: '#1a4b8c' }} />
+            <p>Carregando destaques...</p>
+          </LoadingContainer>
+        ) : erro ? (
+          <ErrorContainer>
+            <p>❌ {erro}</p>
+            <button onClick={carregarDestaques}>Tentar novamente</button>
+          </ErrorContainer>
         ) : destaques.length > 0 ? (
           <>
             {destaquesPrincipais.length > 0 && (
               <DestaquesPrincipais>
                 {destaquesPrincipais.map(destaque => (
-                  <DestaquePrincipal key={destaque.id}>
+                  <DestaquePrincipal key={destaque.id} as={Link} to={`/destaques/${destaque.id}`}>
                     {destaque.imagem && (
                       <DestaquePrincipalImagem 
                         src={destaque.imagem} 
@@ -66,14 +86,9 @@ const Destaques = () => {
                       </DestaqueTipo>
                       <DestaquePrincipalTitulo>{destaque.titulo}</DestaquePrincipalTitulo>
                       <DestaquePrincipalData>
-                        {destaque.createdAt ? new Date(destaque.createdAt).toLocaleDateString('pt-BR') : ''}
+                        {destaque.createdAt ? new Date(destaque.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
                       </DestaquePrincipalData>
                       <DestaquePrincipalResumo>{destaque.descricao}</DestaquePrincipalResumo>
-                      {destaque.link && (
-                        <DestaquePrincipalLink href={destaque.link} target="_blank" rel="noopener noreferrer">
-                          Ver mais
-                        </DestaquePrincipalLink>
-                      )}
                     </DestaquePrincipalOverlay>
                   </DestaquePrincipal>
                 ))}
@@ -83,7 +98,7 @@ const Destaques = () => {
             {destaquesSecundarios.length > 0 && (
               <DestaquesSecundariosGrid>
                 {destaquesSecundarios.map(destaque => (
-                  <DestaqueSecundario key={destaque.id}>
+                  <DestaqueSecundario key={destaque.id} as={Link} to={`/destaques/${destaque.id}`}>
                     {destaque.imagem && (
                       <DestaqueSecundarioImagem 
                         src={destaque.imagem} 
@@ -91,21 +106,16 @@ const Destaques = () => {
                         onError={(e) => {e.target.style.display = 'none'}}
                       />
                     )}
-                    <DestaqueTipo>
-                      <FaStar />
-                      Destaque
-                    </DestaqueTipo>
                     <DestaqueSecundarioConteudo>
+                      <DestaqueTipo>
+                        <FaStar />
+                        Destaque
+                      </DestaqueTipo>
                       <DestaqueSecundarioTitulo>{destaque.titulo}</DestaqueSecundarioTitulo>
                       <DestaqueSecundarioData>
-                        {destaque.createdAt ? new Date(destaque.createdAt).toLocaleDateString('pt-BR') : ''}
+                        {destaque.createdAt ? new Date(destaque.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
                       </DestaqueSecundarioData>
                       <DestaqueSecundarioResumo>{destaque.descricao}</DestaqueSecundarioResumo>
-                      {destaque.link && (
-                        <DestaqueSecundarioLink href={destaque.link} target="_blank" rel="noopener noreferrer">
-                          Ver mais
-                        </DestaqueSecundarioLink>
-                      )}
                     </DestaqueSecundarioConteudo>
                   </DestaqueSecundario>
                 ))}
@@ -141,7 +151,7 @@ const MainContent = styled.main`
 `;
 
 const PageHeader = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   text-align: center;
 `;
 
@@ -162,24 +172,90 @@ const PageDescription = styled.p`
   margin: 0 auto;
 `;
 
-const DestaquesPrincipais = styled.div`
+const LoadingContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
   
-  @media (min-width: 768px) {
-    flex-direction: row;
+  p {
+    color: #1a4b8c;
+    font-size: 1.1rem;
+    margin: 0;
   }
 `;
 
-const DestaquePrincipal = styled.article`
+const ErrorContainer = styled.div`
+  text-align: center;
+  padding: 3rem;
+  background-color: #fee;
+  border-radius: 8px;
+  color: #d32f2f;
+  
+  p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    
+    &:hover {
+      background-color: #b71c1c;
+    }
+  }
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-size: 1.1rem;
+  background-color: #f0f5ff;
+  border-radius: 8px;
+  
+  small {
+    color: #999;
+    font-size: 0.9rem;
+  }
+`;
+
+const DestaquesPrincipais = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const DestaquePrincipal = styled.div`
   position: relative;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   height: 400px;
   flex: 1;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 const DestaquePrincipalImagem = styled.img`
@@ -212,12 +288,7 @@ const DestaqueTipo = styled.span`
   font-size: 0.8rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  background-color: ${props => 
-    props.tipo === 'evento' ? '#1a4b8c' : 
-    props.tipo === 'noticia' ? '#2c5ea0' : 
-    props.tipo === 'galeria' ? '#3a6eaf' : 
-    props.tipo === 'aviso' ? '#ff9800' : '#1a4b8c'
-  };
+  background-color: #1a4b8c;
   color: white;
 `;
 
@@ -238,25 +309,10 @@ const DestaquePrincipalResumo = styled.p`
   line-height: 1.5;
 `;
 
-const DestaquePrincipalLink = styled.a`
-  display: inline-block;
-  padding: 0.5rem 1.5rem;
-  background-color: #1a4b8c;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-  
-  &:hover {
-    background-color: #2c5ea0;
-  }
-`;
-
 const DestaquesSecundariosGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
 `;
 
 const DestaqueSecundario = styled.article`
@@ -264,17 +320,21 @@ const DestaqueSecundario = styled.article`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 `;
 
 const DestaqueSecundarioImagem = styled.img`
   width: 100%;
-  height: 180px;
+  height: 200px;
   object-fit: cover;
 `;
 
@@ -283,58 +343,21 @@ const DestaqueSecundarioConteudo = styled.div`
 `;
 
 const DestaqueSecundarioTitulo = styled.h3`
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #1a4b8c;
   margin-bottom: 0.5rem;
 `;
 
 const DestaqueSecundarioData = styled.p`
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: #666;
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
 `;
 
 const DestaqueSecundarioResumo = styled.p`
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #333;
-  margin-bottom: 1rem;
   line-height: 1.5;
-`;
-
-const DestaqueSecundarioLink = styled.a`
-  display: inline-block;
-  color: #1a4b8c;
-  font-weight: bold;
-  text-decoration: none;
-  
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 3rem;
-  background-color: #f0f5ff;
-  border-radius: 8px;
-  color: #666;
-  font-style: italic;
-  margin: 2rem 0;
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 3rem 2rem;
-  background-color: #f0f5ff;
-  border-radius: 8px;
-  color: #1a4b8c;
-  font-size: 1.1rem;
-  margin: 2rem 0;
-  
-  small {
-    color: #999;
-    font-size: 0.8rem;
-  }
 `;
 
 export default Destaques;

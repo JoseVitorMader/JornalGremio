@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaSpinner } from 'react-icons/fa';
 import { readEventos } from '../../../services/realtimeDatabase';
 
 // Componente da página de Eventos
@@ -10,6 +11,7 @@ const Eventos = () => {
   const [eventos, setEventos] = useState([]);
   const [filtro, setFiltro] = useState('todos');
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
   
   useEffect(() => {
     carregarEventos();
@@ -17,14 +19,24 @@ const Eventos = () => {
 
   const carregarEventos = async () => {
     try {
+      setLoading(true);
+      setErro('');
+      console.log('🔥 Carregando eventos do Firebase...');
+      
       const resultado = await readEventos();
+      console.log('📊 Resultado dos eventos:', resultado);
+      
       if (resultado.success) {
-        setEventos(resultado.data);
+        const dadosEventos = resultado.data || [];
+        console.log('✅ Eventos carregados:', dadosEventos);
+        setEventos(dadosEventos);
       } else {
-        console.error('Erro ao carregar eventos:', resultado.error);
+        setErro('Erro ao carregar eventos: ' + resultado.message);
+        console.error('❌ Erro ao carregar eventos:', resultado.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar eventos:', error);
+      setErro('Erro ao carregar eventos: ' + error.message);
+      console.error('💥 Erro inesperado:', error);
     } finally {
       setLoading(false);
     }
@@ -75,10 +87,18 @@ const Eventos = () => {
         
         <EventosContainer>
           {loading ? (
-            <LoadingMessage>Carregando eventos...</LoadingMessage>
+            <LoadingContainer>
+              <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '2rem', color: '#1a4b8c' }} />
+              <p>Carregando eventos...</p>
+            </LoadingContainer>
+          ) : erro ? (
+            <ErrorContainer>
+              <p>❌ {erro}</p>
+              <button onClick={carregarEventos}>Tentar novamente</button>
+            </ErrorContainer>
           ) : eventosFiltrados.length > 0 ? (
             eventosFiltrados.map(evento => (
-              <EventoCard key={evento.id}>
+              <EventoCard key={evento.id} as={Link} to={`/eventos/${evento.id}`}>
                 {evento.imagem && (
                   <EventoImagem 
                     src={evento.imagem} 
@@ -88,14 +108,15 @@ const Eventos = () => {
                 )}
                 <EventoTipo tipo={evento.tipo}>{
                   evento.tipo === 'academico' ? 'Acadêmico' :
-                  evento.tipo === 'cultural' ? 'Cultural' : 'Esportivo'
+                  evento.tipo === 'cultural' ? 'Cultural' : 
+                  evento.tipo === 'esportivo' ? 'Esportivo' : 'Evento'
                 }</EventoTipo>
                 <EventoConteudo>
                   <EventoTitulo>{evento.titulo}</EventoTitulo>
                   <EventoInfo>
                     <EventoInfoItem>
                       <FaCalendarAlt /> 
-                      {evento.data || (evento.createdAt ? new Date(evento.createdAt).toLocaleDateString('pt-BR') : '')}
+                      {evento.data || (evento.createdAt ? new Date(evento.createdAt).toLocaleDateString('pt-BR') : 'Data a definir')}
                     </EventoInfoItem>
                     {evento.horario && (
                       <EventoInfoItem><FaClock /> {evento.horario}</EventoInfoItem>
@@ -110,13 +131,10 @@ const Eventos = () => {
             ))
           ) : (
             <MensagemVazia>
-              {loading ? 'Carregando...' : 'Nenhum evento encontrado para este filtro.'}
-              {!loading && eventos.length === 0 && (
-                <EmptyHint>
-                  <br />
-                  <small>Use o painel administrativo para adicionar eventos.</small>
-                </EmptyHint>
-              )}
+              {filtro === 'todos' 
+                ? 'Nenhum evento disponível no momento.' 
+                : `Nenhum evento encontrado para a categoria "${filtro}".`
+              }
             </MensagemVazia>
           )}
         </EventosContainer>
@@ -196,10 +214,13 @@ const EventoCard = styled.article`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   
   @media (min-width: 768px) {
     flex-direction: row;
@@ -207,6 +228,7 @@ const EventoCard = styled.article`
   
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -326,6 +348,48 @@ const EmptyHint = styled.div`
   small {
     color: #999;
     font-size: 0.8rem;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  
+  p {
+    color: #1a4b8c;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+`;
+
+const ErrorContainer = styled.div`
+  text-align: center;
+  padding: 3rem;
+  background-color: #fee;
+  border-radius: 8px;
+  color: #d32f2f;
+  
+  p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    
+    &:hover {
+      background-color: #b71c1c;
+    }
   }
 `;
 

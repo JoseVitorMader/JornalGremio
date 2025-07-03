@@ -50,7 +50,7 @@ const Header = () => {
           {mobileMenuOpen ? <FaTimes /> : <FaBars />}
         </MobileMenuButton>
         
-        <NavMenu mobileMenuOpen={mobileMenuOpen}>
+        <NavMenu $mobileMenuOpen={mobileMenuOpen}>
           <NavItem>
             <NavLink to="/noticias" onClick={closeMobileMenu}>
               <FaNewspaper /> Notícias
@@ -194,7 +194,7 @@ const NavMenu = styled.ul`
   padding: 0;
   
   @media (max-width: 768px) {
-    display: ${props => (props.mobileMenuOpen ? 'flex' : 'none')};
+    display: ${props => (props.$mobileMenuOpen ? 'flex' : 'none')};
     flex-direction: column;
     width: 100%;
     margin-top: 1rem;

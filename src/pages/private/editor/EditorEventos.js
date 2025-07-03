@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useAuth } from '../../../contexts/AuthContext';
-import { FaCalendarAlt, FaSave, FaImage, FaTimes, FaPlus, FaClock, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
-import { createEvento, convertImageToBase64 } from '../../../services/realtimeDatabase';
+import { FaCalendarAlt, FaSave, FaImage, FaTimes, FaPlus, FaClock, FaMapMarkerAlt, FaUsers, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
+import { createEvento, convertImageToBase64, readEventos, deleteEvento } from '../../../services/realtimeDatabase';
 
 // Componente do Editor de Eventos para membros do grêmio
 const EditorEventos = () => {
@@ -23,6 +23,11 @@ const EditorEventos = () => {
   const [previewImagem, setPreviewImagem] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
+  
+  // Estados para a lista de eventos
+  const [eventosPublicados, setEventosPublicados] = useState([]);
+  const [carregandoEventos, setCarregandoEventos] = useState(true);
+  const [erroEventos, setErroEventos] = useState('');
   
   // Lista de tipos de eventos disponíveis
   const tiposEvento = [
@@ -157,6 +162,7 @@ const EditorEventos = () => {
               <Input
                 type="text"
                 id="titulo"
+                name="titulo"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Digite o título do evento"
@@ -169,6 +175,7 @@ const EditorEventos = () => {
                 <Label htmlFor="tipo">Tipo de Evento</Label>
                 <Select
                   id="tipo"
+                  name="tipo"
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
                 >
@@ -183,6 +190,7 @@ const EditorEventos = () => {
                 <Input
                   type="date"
                   id="data"
+                  name="data"
                   value={data}
                   onChange={(e) => setData(e.target.value)}
                   required
@@ -196,6 +204,7 @@ const EditorEventos = () => {
                 <Input
                   type="text"
                   id="horario"
+                  name="horario"
                   value={horario}
                   onChange={(e) => setHorario(e.target.value)}
                   placeholder="Ex: 14:00 - 18:00"
@@ -208,6 +217,7 @@ const EditorEventos = () => {
                 <Input
                   type="text"
                   id="local"
+                  name="local"
                   value={local}
                   onChange={(e) => setLocal(e.target.value)}
                   placeholder="Ex: Auditório Principal"
@@ -220,6 +230,7 @@ const EditorEventos = () => {
                 <Input
                   type="number"
                   id="capacidade"
+                  name="capacidade"
                   value={capacidade}
                   onChange={(e) => setCapacidade(e.target.value)}
                   placeholder="Número de pessoas"
@@ -232,6 +243,7 @@ const EditorEventos = () => {
               <Label htmlFor="descricao">Descrição do Evento *</Label>
               <TextArea
                 id="descricao"
+                name="descricao"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 placeholder="Digite a descrição completa do evento"
@@ -254,6 +266,7 @@ const EditorEventos = () => {
                   <InputImagem
                     type="file"
                     id="imagem"
+                    name="imagem"
                     accept="image/*"
                     onChange={handleImagemChange}
                   />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
@@ -115,7 +116,7 @@ const Noticias = () => {
                     </NoticiaAutor>
                   </NoticiaMetadata>
                   <NoticiaResumo>{noticia.resumo}</NoticiaResumo>
-                  <NoticiaLink href={`/noticias/${noticia.id}`}>Ler mais</NoticiaLink>
+                  <NoticiaLink to={`/noticias/${noticia.id}`}>Ler mais</NoticiaLink>
                 </NoticiaConteudo>
               </NoticiaCard>
             ))
@@ -267,7 +268,7 @@ const NoticiaResumo = styled.p`
   line-height: 1.5;
 `;
 
-const NoticiaLink = styled.a`
+const NoticiaLink = styled(Link)`
   display: inline-block;
   color: #1a4b8c;
   font-weight: bold;

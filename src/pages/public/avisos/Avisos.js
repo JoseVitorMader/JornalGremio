@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import { FaBullhorn, FaCalendarAlt, FaExclamationCircle } from 'react-icons/fa';
+import { FaBullhorn, FaCalendarAlt, FaExclamationCircle, FaSpinner } from 'react-icons/fa';
 import { readAvisos } from '../../../services/realtimeDatabase';
 
 // Componente da página de Avisos
@@ -10,6 +11,7 @@ const Avisos = () => {
   const [avisos, setAvisos] = useState([]);
   const [filtro, setFiltro] = useState('todos');
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
   
   useEffect(() => {
     carregarAvisos();
@@ -17,14 +19,24 @@ const Avisos = () => {
 
   const carregarAvisos = async () => {
     try {
+      setLoading(true);
+      setErro('');
+      console.log('🔥 Carregando avisos do Firebase...');
+      
       const resultado = await readAvisos();
+      console.log('📊 Resultado dos avisos:', resultado);
+      
       if (resultado.success) {
-        setAvisos(resultado.data);
+        const dadosAvisos = resultado.data || [];
+        console.log('✅ Avisos carregados:', dadosAvisos);
+        setAvisos(dadosAvisos);
       } else {
-        console.error('Erro ao carregar avisos:', resultado.error);
+        setErro('Erro ao carregar avisos: ' + resultado.message);
+        console.error('❌ Erro ao carregar avisos:', resultado.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar avisos:', error);
+      setErro('Erro ao carregar avisos: ' + error.message);
+      console.error('💥 Erro inesperado:', error);
     } finally {
       setLoading(false);
     }
@@ -78,10 +90,18 @@ const Avisos = () => {
         
         <AvisosContainer>
           {loading ? (
-            <LoadingMessage>Carregando avisos...</LoadingMessage>
+            <LoadingContainer>
+              <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '2rem', color: '#1a4b8c' }} />
+              <p>Carregando avisos...</p>
+            </LoadingContainer>
+          ) : erro ? (
+            <ErrorContainer>
+              <p>❌ {erro}</p>
+              <button onClick={carregarAvisos}>Tentar novamente</button>
+            </ErrorContainer>
           ) : avisosFiltrados.length > 0 ? (
             avisosFiltrados.map(aviso => (
-              <AvisoCard key={aviso.id} tipo={aviso.tipo}>
+              <AvisoCard key={aviso.id} tipo={aviso.tipo} as={Link} to={`/avisos/${aviso.id}`}>
                 <AvisoHeader>
                   <AvisoTipo tipo={aviso.tipo}>
                     <FaExclamationCircle />
@@ -90,23 +110,20 @@ const Avisos = () => {
                   </AvisoTipo>
                   <AvisoData>
                     <FaCalendarAlt /> 
-                    {aviso.createdAt ? new Date(aviso.createdAt).toLocaleDateString('pt-BR') : ''}
+                    {aviso.createdAt ? new Date(aviso.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
                   </AvisoData>
                 </AvisoHeader>
                 <AvisoTitulo>{aviso.titulo}</AvisoTitulo>
                 {aviso.autor && <AvisoAutor>Por: {aviso.autor}</AvisoAutor>}
-                <AvisoConteudo>{aviso.conteudo}</AvisoConteudo>
+                <AvisoConteudo>{aviso.conteudo || aviso.descricao}</AvisoConteudo>
               </AvisoCard>
             ))
           ) : (
             <MensagemVazia>
-              {loading ? 'Carregando...' : 'Nenhum aviso encontrado para este filtro.'}
-              {!loading && avisos.length === 0 && (
-                <EmptyHint>
-                  <br />
-                  <small>Use o painel administrativo para adicionar avisos.</small>
-                </EmptyHint>
-              )}
+              {filtro === 'todos' 
+                ? 'Nenhum aviso disponível no momento.' 
+                : `Nenhum aviso encontrado para a categoria "${filtro}".`
+              }
             </MensagemVazia>
           )}
         </AvisosContainer>
@@ -204,15 +221,20 @@ const AvisoCard = styled.article`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   border-left: 5px solid ${props => 
     props.tipo === 'urgente' ? '#d32f2f' : 
     props.tipo === 'importante' ? '#ff9800' : '#2196f3'
   };
   padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -284,6 +306,48 @@ const EmptyHint = styled.div`
   small {
     color: #999;
     font-size: 0.8rem;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  
+  p {
+    color: #1a4b8c;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+`;
+
+const ErrorContainer = styled.div`
+  text-align: center;
+  padding: 3rem;
+  background-color: #fee;
+  border-radius: 8px;
+  color: #d32f2f;
+  
+  p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    
+    &:hover {
+      background-color: #b71c1c;
+    }
   }
 `;
 

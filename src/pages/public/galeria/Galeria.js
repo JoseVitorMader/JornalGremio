@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import { FaImages, FaSearch } from 'react-icons/fa';
-import { readGaleria } from '../../../services/realtimeDatabase';
+import { FaImages, FaSearch, FaSpinner } from 'react-icons/fa';
+import { readCollection } from '../../../services/realtimeDatabase';
 
 // Componente da página de Galeria
 const Galeria = () => {
@@ -11,6 +12,7 @@ const Galeria = () => {
   const [filtro, setFiltro] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todas');
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
   
   useEffect(() => {
     carregarImagens();
@@ -18,13 +20,17 @@ const Galeria = () => {
 
   const carregarImagens = async () => {
     try {
-      const resultado = await readGaleria();
+      setLoading(true);
+      setErro('');
+      const resultado = await readCollection('galeria');
       if (resultado.success) {
-        setImagens(resultado.data);
+        setImagens(resultado.data || []);
       } else {
+        setErro('Erro ao carregar galeria: ' + resultado.message);
         console.error('Erro ao carregar galeria:', resultado.error);
       }
     } catch (error) {
+      setErro('Erro ao carregar galeria: ' + error.message);
       console.error('Erro ao carregar galeria:', error);
     } finally {
       setLoading(false);
@@ -79,11 +85,19 @@ const Galeria = () => {
         </FiltrosContainer>
         
         {loading ? (
-          <LoadingMessage>Carregando galeria...</LoadingMessage>
+          <LoadingContainer>
+            <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '2rem', color: '#1a4b8c' }} />
+            <p>Carregando galeria...</p>
+          </LoadingContainer>
+        ) : erro ? (
+          <ErrorContainer>
+            <p>❌ {erro}</p>
+            <button onClick={carregarImagens}>Tentar novamente</button>
+          </ErrorContainer>
         ) : imagensFiltradas.length > 0 ? (
           <GaleriaGrid>
             {imagensFiltradas.map(imagem => (
-              <ImagemCard key={imagem.id}>
+              <ImagemCard key={imagem.id} as={Link} to={`/galeria/${imagem.id}`}>
                 <ImagemContainer>
                   <Imagem 
                     src={imagem.imagem || imagem.url} 
@@ -99,7 +113,7 @@ const Galeria = () => {
                   <ImagemMetadata>
                     <ImagemCategoria>{imagem.categoria}</ImagemCategoria>
                     <ImagemData>
-                      {imagem.createdAt ? new Date(imagem.createdAt).toLocaleDateString('pt-BR') : ''}
+                      {imagem.createdAt ? new Date(imagem.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
                     </ImagemData>
                   </ImagemMetadata>
                 </ImagemInfo>
@@ -108,13 +122,10 @@ const Galeria = () => {
           </GaleriaGrid>
         ) : (
           <MensagemVazia>
-            {loading ? 'Carregando...' : 'Nenhuma imagem encontrada para os filtros selecionados.'}
-            {!loading && imagens.length === 0 && (
-              <EmptyHint>
-                <br />
-                <small>Use o painel administrativo para adicionar imagens à galeria.</small>
-              </EmptyHint>
-            )}
+            {categoriaAtiva === 'Todas' && filtro === '' 
+              ? 'Nenhuma imagem disponível no momento.' 
+              : 'Nenhuma imagem encontrada para os filtros selecionados.'
+            }
           </MensagemVazia>
         )}
       </MainContent>
@@ -224,10 +235,15 @@ const ImagemCard = styled.div`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -298,6 +314,48 @@ const EmptyHint = styled.div`
   small {
     color: #999;
     font-size: 0.8rem;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  
+  p {
+    color: #1a4b8c;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+`;
+
+const ErrorContainer = styled.div`
+  text-align: center;
+  padding: 3rem;
+  background-color: #fee;
+  border-radius: 8px;
+  color: #d32f2f;
+  
+  p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    
+    &:hover {
+      background-color: #b71c1c;
+    }
   }
 `;
 

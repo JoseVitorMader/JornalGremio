@@ -5,13 +5,21 @@ import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useAuth } from '../../../contexts/AuthContext';
-import { FaNewspaper, FaCalendarAlt, FaImages, FaBullhorn, FaStar, FaEdit, FaChartBar } from 'react-icons/fa';
+import { 
+  readNoticias, 
+  readEventos, 
+  readAvisos, 
+  readCollection,
+  readDestaques,
+  listenToCollection
+} from '../../../services/realtimeDatabase';
+import { FaNewspaper, FaCalendarAlt, FaImages, FaBullhorn, FaStar, FaEdit, FaChartBar, FaSpinner } from 'react-icons/fa';
 
 // Componente do Dashboard para membros do grêmio
 const Dashboard = () => {
   const { currentUser } = useAuth();
   
-  // Estados para armazenar estatísticas (simulado por enquanto)
+  // Estados para armazenar estatísticas
   const [estatisticas, setEstatisticas] = useState({
     noticias: 0,
     eventos: 0,
@@ -20,66 +28,118 @@ const Dashboard = () => {
     destaques: 0
   });
   
-  // Estado para armazenar atividades recentes (simulado por enquanto)
+  // Estado para armazenar atividades recentes
   const [atividades, setAtividades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
   
-  // Simula carregamento de dados do Firebase (será implementado posteriormente)
+  // Carrega dados do Firebase
   useEffect(() => {
-    // Dados simulados - serão substituídos pela integração com Firebase
-    const estatisticasMock = {
-      noticias: 15,
-      eventos: 8,
-      galeria: 24,
-      avisos: 5,
-      destaques: 6
-    };
-    
-    const atividadesMock = [
-      {
-        id: 1,
-        tipo: 'noticia',
-        titulo: 'Semana da Ciência e Tecnologia',
-        autor: 'Ana Silva',
-        data: '18 de Maio, 2025',
-        acao: 'criou'
-      },
-      {
-        id: 2,
-        tipo: 'evento',
-        titulo: 'Festival Cultural',
-        autor: 'Pedro Santos',
-        data: '17 de Maio, 2025',
-        acao: 'editou'
-      },
-      {
-        id: 3,
-        tipo: 'aviso',
-        titulo: 'Alteração no calendário acadêmico',
-        autor: 'Carla Oliveira',
-        data: '16 de Maio, 2025',
-        acao: 'criou'
-      },
-      {
-        id: 4,
-        tipo: 'galeria',
-        titulo: 'Fotos do Campeonato Interclasses',
-        autor: 'Lucas Mendes',
-        data: '15 de Maio, 2025',
-        acao: 'adicionou'
-      },
-      {
-        id: 5,
-        tipo: 'destaque',
-        titulo: 'Novos Laboratórios de Informática',
-        autor: 'Ana Silva',
-        data: '14 de Maio, 2025',
-        acao: 'definiu'
-      }
-    ];
-    
-    setEstatisticas(estatisticasMock);
-    setAtividades(atividadesMock);
+    carregarDadosDashboard();
   }, []);
+  
+  const carregarDadosDashboard = async () => {
+    try {
+      setLoading(true);
+      setErro('');
+      
+      // Carrega estatísticas
+      console.log('🔥 Carregando dados do dashboard...');
+      const [noticiasResult, eventosResult, avisosResult, galeriaResult, destaquesResult] = await Promise.all([
+        readNoticias(),
+        readEventos(),
+        readAvisos(),
+        readCollection('galeria'),
+        readDestaques()
+      ]);
+      
+      console.log('📊 Resultados do dashboard:', {
+        noticias: noticiasResult,
+        eventos: eventosResult,
+        avisos: avisosResult,
+        galeria: galeriaResult,
+        destaques: destaquesResult
+      });
+      
+      // Atualiza estatísticas
+      setEstatisticas({
+        noticias: noticiasResult.success ? (noticiasResult.data?.length || 0) : 0,
+        eventos: eventosResult.success ? (eventosResult.data?.length || 0) : 0,
+        galeria: galeriaResult.success ? (galeriaResult.data?.length || 0) : 0,
+        avisos: avisosResult.success ? (avisosResult.data?.length || 0) : 0,
+        destaques: destaquesResult.success ? (destaquesResult.data?.length || 0) : 0
+      });
+      
+      // Carrega atividades recentes
+      const atividadesRecentes = [];
+      
+      // Adiciona notícias recentes
+      if (noticiasResult.success && noticiasResult.data) {
+        noticiasResult.data.slice(0, 3).forEach(noticia => {
+          atividadesRecentes.push({
+            id: `noticia_${noticia.id}`,
+            tipo: 'noticia',
+            titulo: noticia.titulo,
+            autor: noticia.autor || 'Autor desconhecido',
+            data: formatarDataAtividade(noticia.createdAt),
+            acao: 'criou',
+            link: `/noticias/${noticia.id}`
+          });
+        });
+      }
+      
+      // Adiciona eventos recentes
+      if (eventosResult.success && eventosResult.data) {
+        eventosResult.data.slice(0, 2).forEach(evento => {
+          atividadesRecentes.push({
+            id: `evento_${evento.id}`,
+            tipo: 'evento',
+            titulo: evento.titulo,
+            autor: evento.autor || 'Autor desconhecido',
+            data: formatarDataAtividade(evento.createdAt),
+            acao: 'criou',
+            link: `/eventos/${evento.id}`
+          });
+        });
+      }
+      
+      // Adiciona avisos recentes
+      if (avisosResult.success && avisosResult.data) {
+        avisosResult.data.slice(0, 2).forEach(aviso => {
+          atividadesRecentes.push({
+            id: `aviso_${aviso.id}`,
+            tipo: 'aviso',
+            titulo: aviso.titulo,
+            autor: aviso.autor || 'Autor desconhecido',
+            data: formatarDataAtividade(aviso.createdAt),
+            acao: 'criou',
+            link: `/avisos/${aviso.id}`
+          });
+        });
+      }
+      
+      // Ordena atividades por data (mais recentes primeiro)
+      atividadesRecentes.sort((a, b) => new Date(b.data) - new Date(a.data));
+      
+      setAtividades(atividadesRecentes.slice(0, 10));
+      
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+      setErro('Erro ao carregar dados do dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const formatarDataAtividade = (timestamp) => {
+    if (!timestamp) return new Date().toLocaleDateString('pt-BR');
+    const data = new Date(timestamp);
+    return data.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
   
   return (
     <PageContainer>
@@ -94,83 +154,105 @@ const Dashboard = () => {
             </PageDescription>
           </PageHeader>
           
-          <EstatisticasGrid>
-            <EstatisticaCard to="/editor/noticias">
-              <EstatisticaIcone><FaNewspaper /></EstatisticaIcone>
-              <EstatisticaNumero>{estatisticas.noticias}</EstatisticaNumero>
-              <EstatisticaTitulo>Notícias</EstatisticaTitulo>
-            </EstatisticaCard>
-            
-            <EstatisticaCard to="/editor/eventos">
-              <EstatisticaIcone><FaCalendarAlt /></EstatisticaIcone>
-              <EstatisticaNumero>{estatisticas.eventos}</EstatisticaNumero>
-              <EstatisticaTitulo>Eventos</EstatisticaTitulo>
-            </EstatisticaCard>
-            
-            <EstatisticaCard to="/editor/galeria">
-              <EstatisticaIcone><FaImages /></EstatisticaIcone>
-              <EstatisticaNumero>{estatisticas.galeria}</EstatisticaNumero>
-              <EstatisticaTitulo>Imagens</EstatisticaTitulo>
-            </EstatisticaCard>
-            
-            <EstatisticaCard to="/editor/avisos">
-              <EstatisticaIcone><FaBullhorn /></EstatisticaIcone>
-              <EstatisticaNumero>{estatisticas.avisos}</EstatisticaNumero>
-              <EstatisticaTitulo>Avisos</EstatisticaTitulo>
-            </EstatisticaCard>
-            
-            <EstatisticaCard to="/editor/destaques">
-              <EstatisticaIcone><FaStar /></EstatisticaIcone>
-              <EstatisticaNumero>{estatisticas.destaques}</EstatisticaNumero>
-              <EstatisticaTitulo>Destaques</EstatisticaTitulo>
-            </EstatisticaCard>
-          </EstatisticasGrid>
-          
-          <AcoesContainer>
-            <AcaoTitulo>Ações Rápidas</AcaoTitulo>
-            <AcoesGrid>
-              <AcaoBotao to="/editor/noticias">
-                <FaNewspaper /> Nova Notícia
-              </AcaoBotao>
-              <AcaoBotao to="/editor/eventos">
-                <FaCalendarAlt /> Novo Evento
-              </AcaoBotao>
-              <AcaoBotao to="/editor/galeria">
-                <FaImages /> Nova Imagem
-              </AcaoBotao>
-              <AcaoBotao to="/editor/avisos">
-                <FaBullhorn /> Novo Aviso
-              </AcaoBotao>
-              <AcaoBotao to="/editor/destaques">
-                <FaStar /> Novo Destaque
-              </AcaoBotao>
-            </AcoesGrid>
-          </AcoesContainer>
-          
-          <AtividadesContainer>
-            <AtividadesTitulo>Atividades Recentes</AtividadesTitulo>
-            <AtividadesLista>
-              {atividades.map(atividade => (
-                <AtividadeItem key={atividade.id}>
-                  <AtividadeIcone tipo={atividade.tipo}>
-                    {atividade.tipo === 'noticia' ? <FaNewspaper /> : 
-                     atividade.tipo === 'evento' ? <FaCalendarAlt /> : 
-                     atividade.tipo === 'galeria' ? <FaImages /> : 
-                     atividade.tipo === 'aviso' ? <FaBullhorn /> : <FaStar />}
-                  </AtividadeIcone>
-                  <AtividadeConteudo>
-                    <AtividadeTexto>
-                      <AtividadeAutor>{atividade.autor}</AtividadeAutor> {atividade.acao} <AtividadeTipo>{atividade.tipo}</AtividadeTipo>: <AtividadeTitulo>{atividade.titulo}</AtividadeTitulo>
-                    </AtividadeTexto>
-                    <AtividadeData>{atividade.data}</AtividadeData>
-                  </AtividadeConteudo>
-                  <AtividadeAcao>
-                    <FaEdit />
-                  </AtividadeAcao>
-                </AtividadeItem>
-              ))}
-            </AtividadesLista>
-          </AtividadesContainer>
+          {loading ? (
+            <LoadingContainer>
+              <FaSpinner style={{ animation: 'spin 2s linear infinite', fontSize: '2rem', color: '#1a4b8c' }} />
+              <LoadingText>Carregando dados do dashboard...</LoadingText>
+            </LoadingContainer>
+          ) : erro ? (
+            <ErrorContainer>
+              <ErrorText>❌ {erro}</ErrorText>
+              <RetryButton onClick={carregarDadosDashboard}>
+                Tentar novamente
+              </RetryButton>
+            </ErrorContainer>
+          ) : (
+            <>
+              <EstatisticasGrid>
+                <EstatisticaCard to="/editor/noticias">
+                  <EstatisticaIcone><FaNewspaper /></EstatisticaIcone>
+                  <EstatisticaNumero>{estatisticas.noticias}</EstatisticaNumero>
+                  <EstatisticaTitulo>Notícias</EstatisticaTitulo>
+                </EstatisticaCard>
+                
+                <EstatisticaCard to="/editor/eventos">
+                  <EstatisticaIcone><FaCalendarAlt /></EstatisticaIcone>
+                  <EstatisticaNumero>{estatisticas.eventos}</EstatisticaNumero>
+                  <EstatisticaTitulo>Eventos</EstatisticaTitulo>
+                </EstatisticaCard>
+                
+                <EstatisticaCard to="/editor/galeria">
+                  <EstatisticaIcone><FaImages /></EstatisticaIcone>
+                  <EstatisticaNumero>{estatisticas.galeria}</EstatisticaNumero>
+                  <EstatisticaTitulo>Imagens</EstatisticaTitulo>
+                </EstatisticaCard>
+                
+                <EstatisticaCard to="/editor/avisos">
+                  <EstatisticaIcone><FaBullhorn /></EstatisticaIcone>
+                  <EstatisticaNumero>{estatisticas.avisos}</EstatisticaNumero>
+                  <EstatisticaTitulo>Avisos</EstatisticaTitulo>
+                </EstatisticaCard>
+                
+                <EstatisticaCard to="/editor/destaques">
+                  <EstatisticaIcone><FaStar /></EstatisticaIcone>
+                  <EstatisticaNumero>{estatisticas.destaques}</EstatisticaNumero>
+                  <EstatisticaTitulo>Destaques</EstatisticaTitulo>
+                </EstatisticaCard>
+              </EstatisticasGrid>
+              
+              <AcoesContainer>
+                <AcaoTitulo>Ações Rápidas</AcaoTitulo>
+                <AcoesGrid>
+                  <AcaoBotao to="/editor/noticias">
+                    <FaNewspaper /> Nova Notícia
+                  </AcaoBotao>
+                  <AcaoBotao to="/editor/eventos">
+                    <FaCalendarAlt /> Novo Evento
+                  </AcaoBotao>
+                  <AcaoBotao to="/editor/galeria">
+                    <FaImages /> Nova Imagem
+                  </AcaoBotao>
+                  <AcaoBotao to="/editor/avisos">
+                    <FaBullhorn /> Novo Aviso
+                  </AcaoBotao>
+                  <AcaoBotao to="/editor/destaques">
+                    <FaStar /> Novo Destaque
+                  </AcaoBotao>
+                </AcoesGrid>
+              </AcoesContainer>
+              
+              <AtividadesContainer>
+                <AtividadesTitulo>Atividades Recentes</AtividadesTitulo>
+                {atividades.length > 0 ? (
+                  <AtividadesLista>
+                    {atividades.map(atividade => (
+                      <AtividadeItem key={atividade.id}>
+                        <AtividadeIcone tipo={atividade.tipo}>
+                          {atividade.tipo === 'noticia' ? <FaNewspaper /> : 
+                           atividade.tipo === 'evento' ? <FaCalendarAlt /> : 
+                           atividade.tipo === 'galeria' ? <FaImages /> : 
+                           atividade.tipo === 'aviso' ? <FaBullhorn /> : <FaStar />}
+                        </AtividadeIcone>
+                        <AtividadeConteudo>
+                          <AtividadeTexto>
+                            <AtividadeAutor>{atividade.autor}</AtividadeAutor> {atividade.acao} <AtividadeTipo>{atividade.tipo}</AtividadeTipo>: <AtividadeTitulo>{atividade.titulo}</AtividadeTitulo>
+                          </AtividadeTexto>
+                          <AtividadeData>{atividade.data}</AtividadeData>
+                        </AtividadeConteudo>
+                        <AtividadeAcao>
+                          <FaEdit />
+                        </AtividadeAcao>
+                      </AtividadeItem>
+                    ))}
+                  </AtividadesLista>
+                ) : (
+                  <NoActivitiesMessage>
+                    Nenhuma atividade recente encontrada.
+                  </NoActivitiesMessage>
+                )}
+              </AtividadesContainer>
+            </>
+          )}
         </MainContent>
       </DashboardContainer>
       <Footer />
@@ -370,6 +452,60 @@ const AtividadeAcao = styled.div`
   &:hover {
     color: #2c5ea0;
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+`;
+
+const LoadingText = styled.p`
+  margin-top: 1rem;
+  color: #1a4b8c;
+  font-size: 1.1rem;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  background-color: #ffebee;
+  border-radius: 8px;
+  margin: 2rem 0;
+`;
+
+const ErrorText = styled.p`
+  color: #d32f2f;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+`;
+
+const RetryButton = styled.button`
+  background-color: #1a4b8c;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background-color: #2c5ea0;
+  }
+`;
+
+const NoActivitiesMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
 `;
 
 export default Dashboard;

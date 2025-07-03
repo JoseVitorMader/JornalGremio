@@ -1,36 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import { readDocument } from '../../../services/realtimeDatabase';
-import { FaCalendarAlt, FaUserEdit, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserEdit, FaArrowLeft, FaShareAlt, FaMapMarkerAlt, FaClock, FaNewspaper, FaCalendar, FaImages, FaBullhorn, FaStar } from 'react-icons/fa';
 
-// Componente para visualizar uma notícia completa
+// Componente universal para visualizar conteúdo completo
 const NoticiaCompleta = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [noticia, setNoticia] = useState(null);
+  const location = useLocation();
+  const [conteudo, setConteudo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
+  
+  // Determina o tipo de conteúdo baseado na URL
+  const tipoConteudo = location.pathname.split('/')[1];
+  
+  const tiposConfig = {
+    'noticias': {
+      path: 'noticias',
+      titulo: 'Notícia',
+      icone: <FaNewspaper />,
+      voltarPara: '/noticias'
+    },
+    'eventos': {
+      path: 'eventos',
+      titulo: 'Evento',
+      icone: <FaCalendar />,
+      voltarPara: '/eventos'
+    },
+    'avisos': {
+      path: 'avisos',
+      titulo: 'Aviso',
+      icone: <FaBullhorn />,
+      voltarPara: '/avisos'
+    },
+    'galeria': {
+      path: 'galeria',
+      titulo: 'Galeria',
+      icone: <FaImages />,
+      voltarPara: '/galeria'
+    },
+    'destaques': {
+      path: 'destaques',
+      titulo: 'Destaque',
+      icone: <FaStar />,
+      voltarPara: '/destaques'
+    }
+  };
+  
+  const config = tiposConfig[tipoConteudo] || tiposConfig['noticias'];
 
   useEffect(() => {
-    carregarNoticia();
-  }, [id]);
+    carregarConteudo();
+  }, [id, tipoConteudo]);
 
-  const carregarNoticia = async () => {
+  const carregarConteudo = async () => {
     try {
       setLoading(true);
-      const resultado = await readDocument('noticias', id);
+      const resultado = await readDocument(config.path, id);
       
       if (resultado.success) {
-        setNoticia(resultado.data);
+        setConteudo(resultado.data);
       } else {
-        setErro('Notícia não encontrada.');
+        setErro(`${config.titulo} não encontrada.`);
       }
     } catch (error) {
-      console.error('Erro ao carregar notícia:', error);
-      setErro('Erro ao carregar notícia.');
+      console.error(`Erro ao carregar ${config.titulo.toLowerCase()}:`, error);
+      setErro(`Erro ao carregar ${config.titulo.toLowerCase()}.`);
     } finally {
       setLoading(false);
     }
@@ -49,8 +88,8 @@ const NoticiaCompleta = () => {
   const compartilhar = () => {
     if (navigator.share) {
       navigator.share({
-        title: noticia.titulo,
-        text: noticia.resumo,
+        title: conteudo.titulo,
+        text: conteudo.resumo || conteudo.descricao,
         url: window.location.href
       });
     } else {
@@ -60,13 +99,17 @@ const NoticiaCompleta = () => {
     }
   };
 
+  const voltarPagina = () => {
+    navigate(config.voltarPara);
+  };
+
   if (loading) {
     return (
       <PageContainer>
         <Header />
         <MainContent>
           <LoadingContainer>
-            <p>Carregando notícia...</p>
+            <p>Carregando {config.titulo.toLowerCase()}...</p>
           </LoadingContainer>
         </MainContent>
         <Footer />
@@ -74,7 +117,7 @@ const NoticiaCompleta = () => {
     );
   }
 
-  if (erro || !noticia) {
+  if (erro || !conteudo) {
     return (
       <PageContainer>
         <Header />
@@ -82,8 +125,8 @@ const NoticiaCompleta = () => {
           <ErrorContainer>
             <h2>Ops! Algo deu errado</h2>
             <p>{erro}</p>
-            <BackButton onClick={() => navigate('/noticias')}>
-              <FaArrowLeft /> Voltar para notícias
+            <BackButton onClick={voltarPagina}>
+              <FaArrowLeft /> Voltar para {config.titulo.toLowerCase()}s
             </BackButton>
           </ErrorContainer>
         </MainContent>
@@ -97,8 +140,8 @@ const NoticiaCompleta = () => {
       <Header />
       <MainContent>
         <NavigationBar>
-          <BackButton onClick={() => navigate('/noticias')}>
-            <FaArrowLeft /> Voltar para notícias
+          <BackButton onClick={voltarPagina}>
+            <FaArrowLeft /> Voltar para {config.titulo.toLowerCase()}s
           </BackButton>
           <ShareButton onClick={compartilhar}>
             <FaShareAlt /> Compartilhar
@@ -107,37 +150,56 @@ const NoticiaCompleta = () => {
 
         <Article>
           <ArticleHeader>
-            <Categoria>{noticia.categoria}</Categoria>
-            <Titulo>{noticia.titulo}</Titulo>
+            <TipoConteudo>
+              {config.icone} {config.titulo}
+            </TipoConteudo>
+            <Titulo>{conteudo.titulo}</Titulo>
             <Metadata>
               <MetadataItem>
-                <FaCalendarAlt /> {formatarData(noticia.createdAt)}
+                <FaCalendarAlt /> {formatarData(conteudo.createdAt)}
               </MetadataItem>
               <MetadataItem>
-                <FaUserEdit /> {noticia.autor}
+                <FaUserEdit /> {conteudo.autor}
               </MetadataItem>
+              {conteudo.local && (
+                <MetadataItem>
+                  <FaMapMarkerAlt /> {conteudo.local}
+                </MetadataItem>
+              )}
+              {conteudo.horario && (
+                <MetadataItem>
+                  <FaClock /> {conteudo.horario}
+                </MetadataItem>
+              )}
             </Metadata>
-            {noticia.resumo && (
-              <Resumo>{noticia.resumo}</Resumo>
+            {(conteudo.resumo || conteudo.descricao) && (
+              <Resumo>{conteudo.resumo || conteudo.descricao}</Resumo>
             )}
           </ArticleHeader>
 
-          {noticia.imagem && (
+          {conteudo.imagem && (
             <ImagemContainer>
-              <Imagem src={noticia.imagem} alt={noticia.titulo} />
+              <Imagem src={conteudo.imagem} alt={conteudo.titulo} />
             </ImagemContainer>
           )}
 
           <Conteudo>
-            {noticia.conteudo.split('\\n').map((paragrafo, index) => (
-              <p key={index}>{paragrafo}</p>
-            ))}
+            {conteudo.conteudo ? (
+              conteudo.conteudo.split('\\n').map((paragrafo, index) => (
+                <p key={index}>{paragrafo}</p>
+              ))
+            ) : (
+              <p>{conteudo.descricao || conteudo.resumo}</p>
+            )}
           </Conteudo>
 
           <ArticleFooter>
             <TagsContainer>
-              {noticia.categoria && (
-                <Tag>{noticia.categoria}</Tag>
+              {conteudo.categoria && (
+                <Tag>{conteudo.categoria}</Tag>
+              )}
+              {conteudo.tipo && (
+                <Tag>{conteudo.tipo}</Tag>
               )}
             </TagsContainer>
           </ArticleFooter>
@@ -241,16 +303,19 @@ const ArticleHeader = styled.header`
   padding-bottom: 1rem;
 `;
 
-const Categoria = styled.span`
-  display: inline-block;
+const TipoConteudo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background-color: #1a4b8c;
   color: white;
-  padding: 0.3rem 0.8rem;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: bold;
   text-transform: uppercase;
   margin-bottom: 1rem;
+  width: fit-content;
 `;
 
 const Titulo = styled.h1`
