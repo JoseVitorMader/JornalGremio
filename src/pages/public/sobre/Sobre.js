@@ -20,10 +20,10 @@ const Sobre = () => {
         <SobreSection>
           <SectionTitle><FaBookOpen /> Nossa Missão</SectionTitle>
           <SectionContent>
-           A chapa UniCEDUP tem como principal objetivo satisfazer as sugestões dos estudantes. Usando os meios criados pela mesma, como o site e as caixas de perguntas já postas nos pilares a frente da escada. A ideia de promover eventos também é objetivo da equipe, inter-classes, show de talentos e muito mais. 
-          Juntamente com as demais ideias, existe a gincana, as salas entrarão em competição nos eventos escolares - por exemplo, a turma que vier mais bem vestida em um evento de festa junina ganhará pontos, somando no final e trazendo um vencedor - fazendo assim os mesmos ganharem o prêmio de uma viagem.
-          Reclamações sobre a gestão escolar ou professores, serão todas encaminhadas a diretoria
-          O grupo não promete coisas que não caibam a eles fazerem.
+           A chapa UniCEDUP tem como objetivo ouvir e atender as possíveis sugestões dos estudantes. Usando os meios criados pela mesma, como o site e as caixas de perguntas já postas nos pilares a frente da escada. A ideia de promover eventos também é objetivo da equipe, inter-classes, show de talentos e muito mais. 
+            Juntamente com as demais ideias, existe a gincana, as salas entrarão em competição nos eventos escolares - por exemplo, a turma que vier mais bem vestida em um evento de festa junina ganhará pontos, somando no final e trazendo um vencedor - fazendo assim os mesmos ganharem o prêmio de uma viagem.
+            Reclamações sobre a gestão escolar ou professores, serão todas encaminhadas a diretoria
+            O grupo não promete coisas que não caibam a eles fazerem.
           </SectionContent>
         </SobreSection>
         
